@@ -1,0 +1,20 @@
+ul {
+  position: absolute;
+  bottom: 2em;
+  right: 2em;
+  display: flex;
+  flex-direction: row;
+  align-items: start;
+  justify-content: center;
+}
+
+li {
+  list-style: none;
+  cursor: pointer;
+}
+
+.paint-bucket {
+  border-radius: 50%;
+  width: 5em;
+  height: 5em;
+}
