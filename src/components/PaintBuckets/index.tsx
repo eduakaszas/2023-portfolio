@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import './styles.scss';
 
 interface PaintBucketsProps {
@@ -16,10 +15,10 @@ const PaintBuckets: React.FC<PaintBucketsProps> = (props) => {
   ];
 
   const pickColor = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const name = e.currentTarget.name;
+    const target = e.currentTarget.name;
 
-    palette.map((color) => {
-      if (color.name === name) {
+    palette.forEach((color) => {
+      if (color.name === target) {
         props.setPickedColor(color.hex);
       }
     });
@@ -29,7 +28,7 @@ const PaintBuckets: React.FC<PaintBucketsProps> = (props) => {
     <div className="paint-container">
       <ul>
         {palette.map((color) => (
-          <li>
+          <li key={color.name}>
             <button
               className="paint-bucket"
               style={{ backgroundColor: color.hex }}
