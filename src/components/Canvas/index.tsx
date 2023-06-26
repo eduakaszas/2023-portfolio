@@ -1,18 +1,18 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './styles.scss';
 
 interface CanvasProps {
-  width: number;
-  height: number;
   pickedColor: string;
+  canvasRef: any;
+  contextRef: any;
 }
 
 const Canvas: React.FC<CanvasProps> = (props) => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const { pickedColor, canvasRef, contextRef } = props;
 
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
 
+  // This useEffect hook will run once when the component mounts.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -27,12 +27,20 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
     context.scale(2, 2);
     context.lineCap = 'round';
-    context.strokeStyle = props.pickedColor;
     context.lineWidth = 5;
     contextRef.current = context;
-  }, [props.pickedColor]);
+  }, []);
 
-  const startDrawing = ({ nativeEvent }: any) => {
+  // This useEffect hook will run when the pickedColor changes.
+  useEffect(() => {
+    if (!contextRef.current) return;
+
+    contextRef.current.strokeStyle = pickedColor;
+  }, [pickedColor, contextRef]);
+
+  const startDrawing = ({
+    nativeEvent,
+  }: React.MouseEvent<HTMLCanvasElement>) => {
     const { offsetX, offsetY } = nativeEvent;
 
     contextRef.current?.beginPath();
@@ -41,7 +49,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
     setIsDrawing(true);
   };
 
-  const draw = ({ nativeEvent }: any) => {
+  const draw = ({ nativeEvent }: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
 
     const { offsetX, offsetY } = nativeEvent;
