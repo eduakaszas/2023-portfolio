@@ -6,6 +6,8 @@ interface PaintBucketsProps {
 }
 
 const PaintBuckets: React.FC<PaintBucketsProps> = (props) => {
+  const { pickedColor, setPickedColor } = props;
+
   const palette = [
     { name: 'white', hex: '#FFFFFF' },
     { name: 'red', hex: '#FFC1C1' },
@@ -14,14 +16,8 @@ const PaintBuckets: React.FC<PaintBucketsProps> = (props) => {
     { name: 'black', hex: '#474747' },
   ];
 
-  const pickColor = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const target = e.currentTarget.name;
-
-    palette.forEach((color) => {
-      if (color.name === target) {
-        props.setPickedColor(color.hex);
-      }
-    });
+  const pickColor = (color: string) => {
+    setPickedColor(color);
   };
 
   return (
@@ -30,10 +26,12 @@ const PaintBuckets: React.FC<PaintBucketsProps> = (props) => {
         {palette.map((color) => (
           <li key={color.name}>
             <button
-              className="paint-bucket"
+              className={`paint-bucket ${
+                pickedColor === color.hex ? 'active' : 'inactive'
+              }`}
               style={{ backgroundColor: color.hex }}
-              name={color.name}
-              onClick={pickColor}
+              name={color.hex}
+              onClick={() => pickColor(color.hex)}
             ></button>
           </li>
         ))}
