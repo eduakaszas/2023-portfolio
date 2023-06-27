@@ -1,9 +1,8 @@
-import React from 'react';
 import './styles.scss';
 
-export default function About() {
+const About: React.FC = () => {
   return (
-    <div>
+    <div className="container">
       <h1>
         Hello world,
         <br />
@@ -14,7 +13,7 @@ export default function About() {
         <br />
         passionate about creating digital designs and experiences.
       </p>
-      <div>
+      <div className="links">
         <a
           href="https://www.linkedin.com/in/eduakaszas/"
           target="_blank"
@@ -28,4 +27,6 @@ export default function About() {
       </div>
     </div>
   );
-}
+};
+
+export default About;
