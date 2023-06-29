@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faDownload } from '@fortawesome/free-solid-svg-icons';
 import PaintBuckets from '../PaintBuckets';
 import './styles.scss';
 
@@ -12,10 +14,21 @@ const Menu: React.FC<PaintBucketsProps> = (props) => {
   const { pickedColor, setPickedColor, clearCanvas, downloadDrawing } = props;
 
   return (
-    <div className="menubar">
-      <PaintBuckets pickedColor={pickedColor} setPickedColor={setPickedColor} />
-      <button onClick={clearCanvas}>Clear</button>
-      <button onClick={downloadDrawing}>Save</button>
+    <div className="menu-container">
+      <div className="menu-bar">
+        <PaintBuckets
+          pickedColor={pickedColor}
+          setPickedColor={setPickedColor}
+        />
+        <div className="button-container">
+          <button onClick={clearCanvas}>
+            <FontAwesomeIcon icon={faTrash} style={{ color: '#000000' }} />
+          </button>
+          <button onClick={downloadDrawing}>
+            <FontAwesomeIcon icon={faDownload} style={{ color: '#000000' }} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
