@@ -1,18 +1,17 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import './styles.scss';
 
 interface CanvasProps {
   pickedColor: string;
   canvasRef: React.RefObject<HTMLCanvasElement>;
   contextRef: React.RefObject<CanvasRenderingContext2D | null> | any;
+  linesRef: React.RefObject<{ x: number; y: number; color: string }[][]>;
 }
 
 const Canvas: React.FC<CanvasProps> = (props) => {
-  const { pickedColor, canvasRef, contextRef } = props;
+  const { pickedColor, canvasRef, contextRef, linesRef } = props;
 
   const [isPointerDown, setIsPointerDown] = useState<boolean>(false);
-  // const [points, setPoints] = useState<any[]>([]);
-  const pointsRef = useRef<{ x: number; y: number }[]>([]);
 
   // This useEffect hook will run once when the component mounts.
   useEffect(() => {
@@ -42,65 +41,91 @@ const Canvas: React.FC<CanvasProps> = (props) => {
     contextRef.current.strokeStyle = pickedColor;
   }, [pickedColor, contextRef]);
 
-  // This function runs when the drawing starts.
+  // This function runs when the user starts drawing aka onPointerDown.
   const handleCanvasPointerDown = ({
     nativeEvent,
   }: React.PointerEvent<HTMLElement>) => {
     const { offsetX, offsetY } = nativeEvent;
     const context = contextRef.current;
+    const lines = linesRef.current;
 
-    if (!context) return;
+    if (!context || !lines) return;
 
     context.beginPath();
     context.moveTo(offsetX, offsetY);
 
     setIsPointerDown(true);
+
+    // Create a new line array if linesRef.current is empty or the last line array is not empty aka a line was already drawn
+    if (lines.length === 0 || lines[lines.length - 1].length > 0) {
+      lines.push([]);
+    }
+
+    // Add the current point to the last line array
+    lines[lines.length - 1].push({
+      x: offsetX,
+      y: offsetY,
+      color: pickedColor,
+    });
   };
 
+  // This function runs while the user is drawing on the canvas aka onPointerMove
   const handleCanvasPointerMove = ({
     nativeEvent,
   }: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isPointerDown) return;
+    if (!isPointerDown || !linesRef.current) return;
 
     const { offsetX, offsetY } = nativeEvent;
-    const currentPos = { x: offsetX, y: offsetY };
-    const points = pointsRef.current;
+    const lines = linesRef.current;
     const context = contextRef.current;
+    const canvas = canvasRef.current;
 
-    if (!context) return;
-    if (!canvasRef.current) return;
+    if (!context || !canvas) return;
 
-    // store all the points in an array
-    points.push(currentPos);
+    // clear the canvas after each line drawn for the lines to be better quality - otherwise the lines are pixelated
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
-    context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-    context.beginPath();
-    context.moveTo(points[0].x, points[0].y);
+    // iterate over the lines array and draw them on the canvas
+    for (const line of lines) {
+      // Skip the incomplete lines
+      if (line.length < 2) continue;
 
-    // draw a smooth path using Bezier curves
-    // excluding last two points because we don't count the start and end points of the line
-    for (let i = 1; i < points.length - 2; i++) {
-      // calculate the control points for the Bezier curve
-      const controlPointX = (points[i].x + points[i + 1].x) / 2;
-      const controlPointY = (points[i].y + points[i + 1].y) / 2;
+      const lineColor = line[0].color; // Get the color of the line
 
-      context.quadraticCurveTo(
-        points[i].x,
-        points[i].y,
-        controlPointX,
-        controlPointY
-      );
+      context.beginPath();
+      context.moveTo(line[0].x, line[0].y);
+      context.strokeStyle = lineColor; // apply the color to the current line
+
+      // use Bezier curves to draw the lines for smoother lines
+      // we need to skip the first and last point of the line array because we already drew them with moveTo and lineTo hence the line.length - 2
+      for (let i = 1; i < line.length - 2; i++) {
+        const controlPointX = (line[i].x + line[i + 1].x) / 2;
+        const controlPointY = (line[i].y + line[i + 1].y) / 2;
+
+        context.quadraticCurveTo(
+          line[i].x,
+          line[i].y,
+          controlPointX,
+          controlPointY
+        );
+      }
+
+      context.stroke();
     }
 
-    context.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-    context.stroke();
+    // Add the current point to the last line array
+    lines[lines.length - 1].push({
+      x: offsetX,
+      y: offsetY,
+      color: pickedColor,
+    });
   };
 
-  // This function runs when the drawing ends.
   const handleCanvasPointerUp = () => {
+    if (!linesRef.current) return;
+
     contextRef.current?.closePath();
     setIsPointerDown(false);
-    pointsRef.current = []; // Reset the points array
   };
 
   return (
