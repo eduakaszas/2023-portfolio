@@ -32,7 +32,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = 'high';
     contextRef.current = context;
-  }, []);
+  }, [canvasRef, contextRef]);
 
   // This useEffect hook will run when the pickedColor changes.
   useEffect(() => {
