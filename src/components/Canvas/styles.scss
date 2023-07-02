@@ -3,4 +3,7 @@
   top: 0;
   left: 0;
   background: #fff;
+  image-rendering: -moz-crisp-edges;
+  touch-action: none;
+  cursor: crosshair;
 }

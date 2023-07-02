@@ -3,22 +3,23 @@ import './styles.scss';
 
 interface CanvasProps {
   pickedColor: string;
-  canvasRef: any;
-  contextRef: any;
+  canvasRef: React.RefObject<HTMLCanvasElement>;
+  contextRef: React.RefObject<CanvasRenderingContext2D | null> | any;
+  linesRef: React.RefObject<{ x: number; y: number; color: string }[][]>;
 }
 
 const Canvas: React.FC<CanvasProps> = (props) => {
-  const { pickedColor, canvasRef, contextRef } = props;
+  const { pickedColor, canvasRef, contextRef, linesRef } = props;
 
-  const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  const [isPointerDown, setIsPointerDown] = useState<boolean>(false);
 
   // This useEffect hook will run once when the component mounts.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.width = window.innerWidth * 2;
-    canvas.height = window.innerHeight * 2;
+    canvas.width = canvas.offsetWidth * 2;
+    canvas.height = canvas.offsetHeight * 2;
     canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
 
@@ -27,7 +28,9 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
     context.scale(2, 2);
     context.lineCap = 'round';
-    context.lineWidth = 5;
+    context.lineWidth = 3;
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
     contextRef.current = context;
   }, []);
 
@@ -38,38 +41,100 @@ const Canvas: React.FC<CanvasProps> = (props) => {
     contextRef.current.strokeStyle = pickedColor;
   }, [pickedColor, contextRef]);
 
-  const startDrawing = ({
+  // This function runs when the user starts drawing aka onPointerDown.
+  const handleCanvasPointerDown = ({
     nativeEvent,
-  }: React.MouseEvent<HTMLCanvasElement>) => {
+  }: React.PointerEvent<HTMLElement>) => {
     const { offsetX, offsetY } = nativeEvent;
+    const context = contextRef.current;
+    const lines = linesRef.current;
 
-    contextRef.current?.beginPath();
-    contextRef.current?.moveTo(offsetX, offsetY);
+    if (!context || !lines) return;
 
-    setIsDrawing(true);
+    context.beginPath();
+    context.moveTo(offsetX, offsetY);
+
+    setIsPointerDown(true);
+
+    // Create a new line array if linesRef.current is empty or the last line array is not empty aka a line was already drawn
+    if (lines.length === 0 || lines[lines.length - 1].length > 0) {
+      lines.push([]);
+    }
+
+    // Add the current point to the last line array
+    lines[lines.length - 1].push({
+      x: offsetX,
+      y: offsetY,
+      color: pickedColor,
+    });
   };
 
-  const draw = ({ nativeEvent }: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
+  // This function runs while the user is drawing on the canvas aka onPointerMove
+  const handleCanvasPointerMove = ({
+    nativeEvent,
+  }: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isPointerDown || !linesRef.current) return;
 
     const { offsetX, offsetY } = nativeEvent;
+    const lines = linesRef.current;
+    const context = contextRef.current;
+    const canvas = canvasRef.current;
 
-    contextRef.current?.lineTo(offsetX, offsetY);
-    contextRef.current?.stroke();
+    if (!context || !canvas) return;
+
+    // clear the canvas after each line drawn for the lines to be better quality - otherwise the lines are pixelated
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // iterate over the lines array and draw them on the canvas
+    for (const line of lines) {
+      // Skip the incomplete lines
+      if (line.length < 2) continue;
+
+      const lineColor = line[0].color; // Get the color of the line
+
+      context.beginPath();
+      context.moveTo(line[0].x, line[0].y);
+      context.strokeStyle = lineColor; // apply the color to the current line
+
+      // use Bezier curves to draw the lines for smoother lines
+      // we need to skip the first and last point of the line array because we already drew them with moveTo and lineTo hence the line.length - 2
+      for (let i = 1; i < line.length - 2; i++) {
+        const controlPointX = (line[i].x + line[i + 1].x) / 2;
+        const controlPointY = (line[i].y + line[i + 1].y) / 2;
+
+        context.quadraticCurveTo(
+          line[i].x,
+          line[i].y,
+          controlPointX,
+          controlPointY
+        );
+      }
+
+      context.stroke();
+    }
+
+    // Add the current point to the last line array
+    lines[lines.length - 1].push({
+      x: offsetX,
+      y: offsetY,
+      color: pickedColor,
+    });
   };
 
-  const finishDrawing = () => {
+  const handleCanvasPointerUp = () => {
+    if (!linesRef.current) return;
+
     contextRef.current?.closePath();
-    setIsDrawing(false);
+    setIsPointerDown(false);
   };
 
   return (
     <canvas
       ref={canvasRef}
       className="canvas"
-      onMouseDown={startDrawing}
-      onMouseMove={draw}
-      onMouseUp={finishDrawing}
+      onPointerDown={handleCanvasPointerDown}
+      onPointerMove={handleCanvasPointerMove}
+      onPointerUp={handleCanvasPointerUp}
     />
   );
 };

@@ -8,6 +8,7 @@ const Home = () => {
   const [pickedColor, setPickedColor] = useState<string>('black');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const linesRef = useRef<{ x: number; y: number; color: string }[][]>([]);
 
   // This function will clear the canvas.
   const clearCanvas = () => {
@@ -19,6 +20,8 @@ const Home = () => {
       window.innerWidth * 2,
       window.innerHeight * 2
     );
+
+    linesRef.current = [];
   };
 
   // This function will download the drawing as a PNG file.
@@ -39,6 +42,7 @@ const Home = () => {
         pickedColor={pickedColor}
         canvasRef={canvasRef}
         contextRef={contextRef}
+        linesRef={linesRef}
       />
       <About />
       <Menu
