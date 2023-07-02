@@ -4,14 +4,16 @@ const About: React.FC = () => {
   return (
     <div className="container">
       <h1>
-        Hello world,
+        Hello world!
         <br />
-        my name is Édua.
+        My name is Édua.
       </h1>
       <p>
         I'm your friendly neighbourhood frontend developer,
         <br />
-        passionate about creating digital designs and experiences.
+        passionate about creating digital products
+        <br />
+        and experiences.
       </p>
       <div className="links">
         <a
