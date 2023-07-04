@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { setupCanvas } from '../../utils/setupCanvas';
 import './styles.scss';
 
 interface CanvasProps {
@@ -17,22 +18,10 @@ const Canvas: React.FC<CanvasProps> = (props) => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    canvas.width = canvas.offsetWidth * 2;
-    canvas.height = canvas.offsetHeight * 2;
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
-
-    handleResize();
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    setupCanvas(canvas, context, contextRef);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasRef, contextRef]);
 
@@ -42,26 +31,6 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
     contextRef.current.strokeStyle = pickedColor;
   }, [pickedColor, contextRef]);
-
-  const handleResize = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const context = canvas.getContext('2d');
-    if (!context) return;
-
-    canvas.width = canvas.offsetWidth * 2;
-    canvas.height = canvas.offsetHeight * 2;
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
-
-    context.scale(2, 2);
-    context.lineCap = 'round';
-    context.lineWidth = 3;
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = 'high';
-    contextRef.current = context;
-  };
 
   // This function runs when the user starts drawing aka onPointerDown.
   const handleCanvasPointerDown = ({
@@ -157,6 +126,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
       onPointerDown={handleCanvasPointerDown}
       onPointerMove={handleCanvasPointerMove}
       onPointerUp={handleCanvasPointerUp}
+      style={{ width: window.innerWidth, height: window.innerHeight }}
     />
   );
 };
