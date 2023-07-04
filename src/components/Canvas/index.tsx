@@ -13,25 +13,27 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
   const [isPointerDown, setIsPointerDown] = useState<boolean>(false);
 
-  // This useEffect hook will run once when the component mounts.
+  // Listen to the window resize event and call the handleResize function
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
 
     canvas.width = canvas.offsetWidth * 2;
     canvas.height = canvas.offsetHeight * 2;
     canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
 
-    const context = canvas.getContext('2d');
-    if (!context) return;
+    handleResize();
 
-    context.scale(2, 2);
-    context.lineCap = 'round';
-    context.lineWidth = 3;
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = 'high';
-    contextRef.current = context;
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasRef, contextRef]);
 
   // This useEffect hook will run when the pickedColor changes.
@@ -40,6 +42,26 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
     contextRef.current.strokeStyle = pickedColor;
   }, [pickedColor, contextRef]);
+
+  const handleResize = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    canvas.width = canvas.offsetWidth * 2;
+    canvas.height = canvas.offsetHeight * 2;
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+
+    context.scale(2, 2);
+    context.lineCap = 'round';
+    context.lineWidth = 3;
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    contextRef.current = context;
+  };
 
   // This function runs when the user starts drawing aka onPointerDown.
   const handleCanvasPointerDown = ({
