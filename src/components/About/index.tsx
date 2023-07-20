@@ -23,7 +23,7 @@ const About: React.FC = () => {
         >
           LinkedIn
         </a>
-        <a href="/edua_kaszas_2023_resume.pdf" download>
+        <a href="/edua_kaszas_resume_2023_h2.pdf" download>
           Download CV
         </a>
       </div>
